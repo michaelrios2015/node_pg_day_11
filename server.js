@@ -4,6 +4,27 @@ const express = require('express');
 
 const app = express();
 
+// so essentially our first api route 
+app.get('/', async(req, res, next)=> {
+    // try catch just gives us a better way to fail
+    // try is the risky one catch is teh safe one 
+    try {
+        const response = await client.query('SELECT * FROM depts');
+        // respones has a whole bunch of stuff 
+        // console.log(response);
+        res.send(response.rows);
+    }
+    // ex seems to just be the error or maybe exception can be called whatever you want 
+    catch(ex){
+        // next seems to be a magical error message handler
+        // in this case it is sent to to the webpage 
+        next(ex)
+        // at this point console.log only appears in the terminal 
+        console.log(ex)
+    }
+
+});
+
 const port = process.env.PORT || 3000;
 
 app.listen(port, ()=> console.log(`lostening on port ${port}`));
