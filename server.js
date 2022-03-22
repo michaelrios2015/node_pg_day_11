@@ -4,15 +4,34 @@ const express = require('express');
 
 const app = express();
 
-// so essentially our first api route 
+// so at the beggining we did not have a seperate api and componenet all just mixed together 
 app.get('/', async(req, res, next)=> {
     // try catch just gives us a better way to fail
     // try is the risky one catch is teh safe one 
     try {
         const response = await client.query('SELECT * FROM depts');
+        const depts = response.rows
         // respones has a whole bunch of stuff 
         // console.log(response);
-        res.send(response.rows);
+        res.send(`
+        <html>
+            <head>
+            </head>
+            <body>
+                <h1> FORDHAM </h1>
+                <ul>
+                    ${
+                        depts.map( dept => `
+                            <li>
+                                <a href = 'depts/${dept.id}'>
+                                ${ dept.name }
+                                </a>
+                            </li>
+                        `).join('') 
+                    }
+                </ul>
+            </body>
+        /<html>`);
     }
     // ex seems to just be the error or maybe exception can be called whatever you want 
     catch(ex){
@@ -24,6 +43,12 @@ app.get('/', async(req, res, next)=> {
     }
 
 });
+
+app.get('*', (req, res, next) =>{
+    res.send('what???');
+  });
+  
+
 
 const port = process.env.PORT || 3000;
 
