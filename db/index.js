@@ -1,6 +1,6 @@
 // here the pg client lets us connect to a database 
 const pg = require('pg');
-const postgresUrl = process.env.DATABASE_URL
+const postgresUrl = process.env.DATABASE_URL || 'postgres://postgres:JerryPine@localhost/depts_classes'
 
 const client = new pg.Client(postgresUrl);
 
