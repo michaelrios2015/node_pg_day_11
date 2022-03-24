@@ -1,6 +1,8 @@
 // here the pg client lets us connect to a database 
 const pg = require('pg');
-const client = new pg.Client('postgres://postgres:JerryPine@localhost/depts_classes');
+const postgresUrl = process.env.DATABASE_URL
+
+const client = new pg.Client(postgresUrl);
 
 
 // we used this often... I started liking to just create everything outside of the app
