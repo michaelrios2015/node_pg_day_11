@@ -1,8 +1,17 @@
+// starting to seperate out parts, the computer does not care but it is fing unreadable if you don't
+// do this 
+const { client, syncAndSeed } = require('./db');  
+
 // this does the magic of leeting us use postgres in general this is like the library I use in python
-const pg = require('pg');
 const express = require('express');
+const path = require('path');
 
 const app = express();
+
+// so the famous static files which include css, pictures, javascript, I think they are called static because 
+// they never change while a html could change... even just a straight html file needs to change I believe
+// for the moment it is ok I don't completely understand 
+app.use('/assest', express.static(path.join(__dirname, 'assests')));
 
 // so at the beggining we did not have a seperate api and componenet all just mixed together 
 app.get('/', async(req, res, next)=> {
@@ -13,9 +22,11 @@ app.get('/', async(req, res, next)=> {
         const depts = response.rows
         // respones has a whole bunch of stuff 
         // console.log(response);
+        // the famous list 
         res.send(`
         <html>
             <head>
+                <link rel='stylesheet' href='/assest/styles.css' />
             </head>
             <body>
                 <h1> FORDHAM </h1>
@@ -31,7 +42,7 @@ app.get('/', async(req, res, next)=> {
                     }
                 </ul>
             </body>
-        /<html>`);
+        </html>`);
     }
     // ex seems to just be the error or maybe exception can be called whatever you want 
     catch(ex){
@@ -44,6 +55,64 @@ app.get('/', async(req, res, next)=> {
 
 });
 
+app.get('/depts/:id', async(req, res, next)=> {
+    // try catch just gives us a better way to fail
+    // try is the risky one catch is teh safe one 
+    console.log('here')
+    try {
+        // the magic of promises which is just an array of await calles that are not dependent
+        // on each other
+        // the magic $1 to nake sql injection harder
+        const promises = [
+            client.query('SELECT * FROM depts WHERE id=$1', [req.params.id]),
+            client.query('SELECT * FROM courses WHERE depts_id=$1', [req.params.id])
+        ];
+
+        // the famous promis all which just lets you deal with more then one await at a time 
+        // we even destructed it (not my favorite term) to make it slightly easier use 
+        const [deptResponses, courseRespones ] = await Promise.all(promises);
+        
+        const dept = deptResponses.rows[0];
+        
+        // const response = await client.query('SELECT * FROM depts WHERE id=2');
+        const courses = courseRespones.rows;
+
+        // respones has a whole bunch of stuff 
+        // console.log(response);
+        // the famous list 
+        res.send(`
+        <html>
+            <head>
+                <link rel='stylesheet' href='/assest/styles.css' />
+            </head>
+            <body>
+            <h1>   Fordham </h1>    
+            <h2> <a href = '/'>Depts:</a>  ${ dept.name } </h2>
+                <ul>
+                ${
+                    courses.map( course => `
+                        <li>
+                            ${ course.name }
+                            </a>
+                        </li>
+                    `).join('') 
+                }
+                </ul>        
+            </body>
+        </html>`);
+    }
+    // ex seems to just be the error or maybe exception can be called whatever you want 
+    catch(ex){
+        // next seems to be a magical error message handler
+        // in this case it is sent to to the webpage 
+        next(ex)
+        // at this point console.log only appears in the terminal 
+        console.log(ex)
+    }
+
+});
+
+
 app.get('*', (req, res, next) =>{
     res.send('what???');
   });
@@ -54,41 +123,6 @@ const port = process.env.PORT || 3000;
 
 app.listen(port, ()=> console.log(`lostening on port ${port}`));
 
-// here the pg client lets us connect to a database 
-const client = new pg.Client('postgres://postgres:JerryPine@localhost/depts_classes');
-
-// we used this often... I started liking to just create everything outside of the app
-// and just connect to the app from the database 
-const syncAndSeed = async() => {
-    // so some sql 
-    const SQL = `
-    DROP TABLE IF EXISTS courses;
-    DROP TABLE IF EXISTS depts;
-    CREATE TABLE IF NOT EXISTS depts(
-        id INTEGER PRIMARY KEY,
-        name VARCHAR(100) NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS courses(
-        id INTEGER,
-        name VARCHAR(100) NOT NULL,
-        depts_id INTEGER REFERENCES depts(id),
-        PRIMARY KEY (id, depts_id)
-    );
-    
-    -- a little data
-    INSERT INTO depts(id, name) VALUES(1, 'CS');
-    INSERT INTO depts(id, name) VALUES(2, 'Visual Arts');
-    INSERT INTO depts(id, name) VALUES(3, 'Spanish');
-    
-    INSERT INTO courses(id, name, depts_id) VALUES(1, 'C++', 1);
-    INSERT INTO courses(id, name, depts_id) VALUES(2, 'Java', 1);
-    INSERT INTO courses(id, name, depts_id) VALUES(1, 'Painting', 2);
-    `;
-
-        //this part that connects then runs the SQL 
-    await client.query(SQL);
-};
 
 
 // we try to actually connect it could fail so the try an dcatch
