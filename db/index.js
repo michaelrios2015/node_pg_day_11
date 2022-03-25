@@ -2,7 +2,12 @@
 const pg = require('pg');
 const postgresUrl = process.env.DATABASE_URL || 'postgres://postgres:JerryPine@localhost/depts_classes'
 
-const client = new pg.Client(postgresUrl);
+const client = new pg.Client({
+    connectionString: postgresUrl,
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
 
 
 // we used this often... I started liking to just create everything outside of the app

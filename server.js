@@ -121,7 +121,7 @@ app.get('*', (req, res, next) =>{
 
 const port = process.env.PORT || 3000;
 
-app.listen(port, ()=> console.log(`lostening on port ${port}`));
+app.listen(port, ()=> console.log(`listening on port ${port}`));
 
 
 
